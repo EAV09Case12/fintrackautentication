@@ -1,6 +1,8 @@
 package com.example.webapi.fintrackautentication.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,10 +14,13 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResetPasswordRequestDTO {
-	@NotBlank
-	private String token;
+public class RegisterRequestDTO {
+    @NotBlank
+    @Email
+    @Size(max = 100)
+    private String email;
 
-	@NotBlank
-	private String newPassword;
+    @NotBlank
+    @Size(min = 8, max = 100)
+    private String password;
 }

@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -25,14 +26,17 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class RefreshToken {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false, unique = true)
-	private String token;
+    @ToString.Exclude
+    @Column(nullable = false, unique = true)
+    private String token;
 
+    @ToString.Exclude
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -41,13 +45,7 @@ public class RefreshToken {
 	private LocalDateTime expiresAt;
 
     @Column(nullable = false)
-    private boolean revocado;
-
-    @Column(name = "ip_origen", length = 50)
-    private String ipOrigen;
-
-    @Column(name = "user_agent", length = 500)
-    private String userAgent;
+    private boolean revoked;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

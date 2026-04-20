@@ -1,6 +1,7 @@
 package com.example.webapi.fintrackautentication.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,5 +15,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RefreshTokenRequestDTO {
 	@NotBlank
+	@Size(max = 255)
 	private String refreshToken;
 }

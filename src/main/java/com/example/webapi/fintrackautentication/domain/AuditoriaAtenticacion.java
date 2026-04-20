@@ -36,8 +36,14 @@ public class AuditoriaAtenticacion {
 	@Column(nullable = false)
 	private String accion;
 
-	@Column(name = "timestamp", nullable = false)
-	private LocalDateTime timestamp;
+    @Column(name = "email_intentado")
+    private String emailIntentado;
+
+    @Column(nullable = false)
+    private boolean exito;
+
+	@Column(length = 1000)
+	private String mensaje;
 
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.HashSet;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -48,9 +49,6 @@ public class User {
     @Column(name = "cuenta_expirada", nullable = false)
     private boolean cuentaExpirada;
 
-    @Column(name = "credenciales_expiradas", nullable = false)
-    private boolean credencialesExpiradas;
-
     @Column(name = "intentos_fallidos", nullable = false)
     private int intentosFallidos;
 
@@ -67,6 +65,12 @@ public class User {
 
     @OneToMany(mappedBy = "user")
         @ToString.Exclude
-    private Set<UserRol> usuarioRoles;
+    private Set<UserRol> usuarioRoles = new HashSet<>();
+
+    public void assignRole(UserRol userRol) {
+        if (userRol == null) return;
+        userRol.setUser(this);
+        this.usuarioRoles.add(userRol);
+    }
 }
 

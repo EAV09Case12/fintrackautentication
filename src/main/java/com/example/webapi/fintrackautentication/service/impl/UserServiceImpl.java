@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void assignDefaultRole(User user) {
-        final String defaultRoleName = "ROLE_USER";
+        final String defaultRoleName = "USER";
         Rol rol = rolRepository.findByNombre(defaultRoleName)
                 .orElseThrow(() -> new com.example.webapi.fintrackautentication.exception.RoleNotFoundException("Default role not configured: " + defaultRoleName));
 

@@ -22,8 +22,8 @@ public class RoleSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        seedRole("ROLE_USER");
-        seedRole("ROLE_ADMIN");
+        seedRole("USER");
+        seedRole("ADMIN");
     }
 
     private void seedRole(String roleName) {

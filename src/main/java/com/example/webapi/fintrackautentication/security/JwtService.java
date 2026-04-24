@@ -8,19 +8,63 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import javax.crypto.SecretKey;
 
-import java.lang.reflect.Method;
-import java.security.Key;
 import java.util.Date;
+import java.util.List;
+import java.util.Collections;
 
 @Service
 public class JwtService {
 
 	@Value("${jwt.secret:changeitchangeitchangeitchangeit}")
 	private String jwtSecret;
+	@Value("${jwt.access.expiration-ms:900000}")
+	private long accessTokenExpirationMs;
+	@Value("${jwt.refresh.expiration-ms:604800000}")
+	private long refreshTokenExpirationMs;
 
 	public String extractUsername(String token) {
 		return extractAllClaims(token).getSubject();
+	}
+
+	public String generateToken(String subject, long expirationMillis) {
+		Date now = new Date();
+		Date exp = new Date(now.getTime() + expirationMillis);
+		return Jwts.builder()
+                .subject(subject)
+                .issuedAt(now)
+                .expiration(exp)
+                .signWith(getSigningKey()) 
+                .compact();
+    }
+
+	public String generateAccessToken(String subject, List<String> roles, long expirationMillis) {
+		Date now = new Date();
+		Date exp = new Date(now.getTime() + expirationMillis);
+		return Jwts.builder()
+                .subject(subject)
+                .claim("roles", roles == null ? Collections.emptyList() : roles) 
+                .issuedAt(now)
+                .expiration(exp)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+	public String generateAccessToken(String subject, List<String> roles) {
+        return generateAccessToken(subject, roles, accessTokenExpirationMs);
+    }
+
+	public String generateRefreshToken(String subject) {
+		return generateToken(subject, refreshTokenExpirationMs);
+	}
+
+	public long getAccessTokenExpirationMs() {
+		return accessTokenExpirationMs;
+	}
+
+	public long getRefreshTokenExpirationMs() {
+		return refreshTokenExpirationMs;
 	}
 
 	public boolean isTokenValid(String token, UserDetails userDetails) {
@@ -34,41 +78,14 @@ public class JwtService {
 	}
 
 	private Claims extractAllClaims(String token) {
-		Key key = getSigningKey();
-		try {
-			// Try modern API via reflection: Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody()
-			Method parserBuilderM = Jwts.class.getMethod("parserBuilder");
-			Object parserBuilder = parserBuilderM.invoke(null);
-			Method setSigningKeyM = parserBuilder.getClass().getMethod("setSigningKey", Key.class);
-			Object withKey = setSigningKeyM.invoke(parserBuilder, key);
-			Method buildM = withKey.getClass().getMethod("build");
-			Object parser = buildM.invoke(withKey);
-			Method parseClaimsJwsM = parser.getClass().getMethod("parseClaimsJws", String.class);
-			Object jws = parseClaimsJwsM.invoke(parser, token);
-			Method getBodyM = jws.getClass().getMethod("getBody");
-			return (Claims) getBodyM.invoke(jws);
-		} catch (NoSuchMethodException ignored) {
-			// Fall back to older API via reflection: Jwts.parser().setSigningKey(key).build().parseClaimsJws(token).getBody()
-			try {
-				Method parserM = Jwts.class.getMethod("parser");
-				Object parserBuilder = parserM.invoke(null);
-				Method setSigningKeyM = parserBuilder.getClass().getMethod("setSigningKey", Key.class);
-				Object withKey = setSigningKeyM.invoke(parserBuilder, key);
-				Method buildM = withKey.getClass().getMethod("build");
-				Object parser = buildM.invoke(withKey);
-				Method parseClaimsJwsM = parser.getClass().getMethod("parseClaimsJws", String.class);
-				Object jws = parseClaimsJwsM.invoke(parser, token);
-				Method getBodyM = jws.getClass().getMethod("getBody");
-				return (Claims) getBodyM.invoke(jws);
-			} catch (Exception ex) {
-				throw new RuntimeException("Failed to parse JWT via reflection", ex);
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to parse JWT via reflection", e);
-		}
-	}
+		return Jwts.parser()
+                .verifyWith(getSigningKey()) 
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
 
-	private Key getSigningKey() {
+	private SecretKey getSigningKey() {
 		try {
 			byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
 			return Keys.hmacShaKeyFor(keyBytes);

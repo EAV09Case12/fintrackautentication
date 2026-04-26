@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.validation.FieldError;
 import java.util.stream.Collectors;
@@ -16,6 +17,12 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(EmailAlreadyExistsException.class)
 	public ResponseEntity<MessageResponseDTO> handleEmailExists(EmailAlreadyExistsException ex) {
 		MessageResponseDTO body = new MessageResponseDTO(ex.getMessage());
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<MessageResponseDTO> handleDataIntegrity(DataIntegrityViolationException ex) {
+		MessageResponseDTO body = new MessageResponseDTO("El correo ya está registrado");
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
 	}
 
@@ -33,8 +40,14 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<MessageResponseDTO> handleBadCredentials(BadCredentialsException ex) {
-		MessageResponseDTO body = new MessageResponseDTO(ex.getMessage() == null ? "Bad credentials" : ex.getMessage());
+		MessageResponseDTO body = new MessageResponseDTO(ex.getMessage() == null ? "credenciales inválidas" : ex.getMessage());
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+	}
+
+	@ExceptionHandler(UserNotFoundException.class)
+	public ResponseEntity<MessageResponseDTO> handleUserNotFound(UserNotFoundException ex) {
+		MessageResponseDTO body = new MessageResponseDTO(ex.getMessage() == null ? "usuario no encontrado" : ex.getMessage());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
@@ -42,7 +55,7 @@ public class GlobalExceptionHandler {
 		String msg = ex.getBindingResult().getFieldErrors().stream()
 				.map(FieldError::getDefaultMessage)
 				.collect(Collectors.joining("; "));
-		MessageResponseDTO body = new MessageResponseDTO(msg.isEmpty() ? "Validation failed" : msg);
+		MessageResponseDTO body = new MessageResponseDTO(msg.isEmpty() ? "Validación fallida" : msg);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
 	}
 

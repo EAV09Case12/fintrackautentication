@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
 
     private void validateEmailNotTaken(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new com.example.webapi.fintrackautentication.exception.EmailAlreadyExistsException("Email already in use");
+            throw new com.example.webapi.fintrackautentication.exception.EmailAlreadyExistsException("El correo ya está registrado");
         }
     }
 

@@ -14,6 +14,7 @@ import com.example.webapi.fintrackautentication.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import com.example.webapi.fintrackautentication.exception.UserNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,18 +38,18 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 		// Locate user first to manage attempt counters
 		var userOpt = userRepository.findByEmail(request.getEmail());
 		if (userOpt.isEmpty()) {
-			saveAudit(null, "LOGIN", request.getEmail(), false, "User not found");
-			throw new BadCredentialsException("Bad credentials");
+			saveAudit(null, "LOGIN", request.getEmail(), false, "Usuario no encontrado");
+			throw new UserNotFoundException("usuario no encontrado");
 		}
 		User user = userOpt.get();
 
 		if (user.isCuentaBloqueada()) {
-			saveAudit(user, "LOGIN", user.getEmail(), false, "Account locked");
-			throw new BadCredentialsException("Bad credentials");
+			saveAudit(user, "LOGIN", user.getEmail(), false, "Cuenta bloqueada");
+			throw new BadCredentialsException("Cuenta bloqueada");
 		}
 		if (!user.isEstado()) {
-			saveAudit(user, "LOGIN", user.getEmail(), false, "Account inactive");
-			throw new BadCredentialsException("Bad credentials");
+			saveAudit(user, "LOGIN", user.getEmail(), false, "Cuenta inactiva");
+			throw new BadCredentialsException("Cuenta inactiva");
 		}
 
 		try {
@@ -62,7 +63,7 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 
 			// create tokens (TokenServiceImpl already revokes previous tokens)
 			AuthenticationResponseDTO tokens = tokenService.createTokensForUser(user);
-			saveAudit(user, "LOGIN", user.getEmail(), true, "Login successful");
+			saveAudit(user, "LOGIN", user.getEmail(), true, "Inicio de sesión exitoso");
 			return tokens;
 		} catch (BadCredentialsException ex) {
 			// failed auth: increment attempts and possibly lock
@@ -75,12 +76,12 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 			userRepository.save(user);
 
 			if (user.isCuentaBloqueada()) {
-				saveAudit(user, "LOGIN", user.getEmail(), false, "Account locked due to failed attempts");
-				throw new BadCredentialsException("Account locked due to failed attempts");
+				saveAudit(user, "LOGIN", user.getEmail(), false, "Cuenta bloqueada por intentos fallidos");
+				throw new BadCredentialsException("Cuenta bloqueada por intentos fallidos");
 			}
 
-			saveAudit(user, "LOGIN", user.getEmail(), false, "Bad credentials");
-			throw ex;
+			saveAudit(user, "LOGIN", user.getEmail(), false, "Credenciales inválidas");
+			throw new BadCredentialsException("credenciales inválidas");
 		} catch (Exception ex) {
 			saveAudit(user, "LOGIN", user.getEmail(), false, ex.getMessage());
 			throw ex;
@@ -104,12 +105,12 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 				if (email != null) user = userRepository.findByEmail(email).orElse(null);
 			}
 
-			saveAudit(user, "REFRESH_TOKEN", email, true, "Refresh token rotated");
+			saveAudit(user, "REFRESH_TOKEN", email, true, "Token de refresco renovado");
 			return opt.get();
 		}
 
-		saveAudit(null, "REFRESH_TOKEN", null, false, "Invalid or expired refresh token");
-		throw new BadCredentialsException("Invalid or expired refresh token");
+		saveAudit(null, "REFRESH_TOKEN", null, false, "Token de refresco inválido o expirado");
+		throw new BadCredentialsException("Token de refresco inválido o expirado");
 	}
 
 	@Override
@@ -127,7 +128,7 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 
 			tokenService.revokeByToken(request.getRefreshToken());
 
-			saveAudit(user, "LOGOUT", email, true, "Logout - refresh token revoked");
+			saveAudit(user, "LOGOUT", email, true, "Cierre de sesión - token de refresco revocado");
 		} catch (Exception ex) {
 			saveAudit(null, "LOGOUT", null, false, ex.getMessage());
 			throw ex;

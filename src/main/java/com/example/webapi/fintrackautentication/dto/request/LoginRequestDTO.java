@@ -15,12 +15,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginRequestDTO {
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "El correo es obligatorio")
+    @Size(max = 100, message = "El correo debe tener como máximo 100 caracteres")
     private String email;
 
-    @NotBlank
-    @Size(min = 8, max = 20)
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 8, max = 20, message = "La contraseña debe tener entre 8 y 20 caracteres")
     private String password;
 }
 

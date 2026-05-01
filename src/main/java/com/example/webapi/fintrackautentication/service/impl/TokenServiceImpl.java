@@ -24,7 +24,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public AuthenticationResponseDTO createTokensForUser(User user) {
         // revoke existing tokens for user to avoid duplicates
-        refreshTokenRepository.findByUserId(user.getId()).ifPresent(old -> {
+        refreshTokenRepository.findByUserId(user.getId()).forEach(old -> {
             old.setRevoked(true);
             old.setRevokedAt(LocalDateTime.now());
             refreshTokenRepository.save(old);
@@ -104,7 +104,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public void revokeAllForUser(Long userId) {
-        refreshTokenRepository.findByUserId(userId).ifPresent(rt -> {
+        refreshTokenRepository.findByUserId(userId).forEach(rt -> {
             rt.setRevoked(true);
             rt.setRevokedAt(LocalDateTime.now());
             refreshTokenRepository.save(rt);

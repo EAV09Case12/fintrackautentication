@@ -9,6 +9,8 @@ import com.example.webapi.fintrackautentication.service.AutenticacionService;
 import com.example.webapi.fintrackautentication.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,7 +33,7 @@ public class AuthController {
 	@Operation(summary = "Registro", description = "Registrar un usuario en el sistema con email y contraseña")
 	public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
 		UserResponseDTO created = userService.register(request);
-		return ResponseEntity.ok(created);
+		return ResponseEntity.status(HttpStatus.CREATED).body(created);
 	}
 
 	@PostMapping("/login")

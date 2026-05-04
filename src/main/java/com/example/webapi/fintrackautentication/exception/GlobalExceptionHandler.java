@@ -64,4 +64,10 @@ public class GlobalExceptionHandler {
 		MessageResponseDTO body = new MessageResponseDTO(ex.getMessage() == null ? "Internal server error" : ex.getMessage());
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
 	}
+
+	@ExceptionHandler(InvalidRefreshTokenException.class)
+	public ResponseEntity<MessageResponseDTO> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+		MessageResponseDTO body = new MessageResponseDTO(ex.getMessage());
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+	}
 }

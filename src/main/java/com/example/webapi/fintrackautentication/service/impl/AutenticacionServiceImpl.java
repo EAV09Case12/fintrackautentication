@@ -14,6 +14,8 @@ import com.example.webapi.fintrackautentication.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+
+import com.example.webapi.fintrackautentication.exception.InvalidRefreshTokenException;
 import com.example.webapi.fintrackautentication.exception.UserNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
@@ -110,7 +112,7 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 		}
 
 		saveAudit(null, "REFRESH_TOKEN", null, false, "Token de refresco inválido o expirado");
-		throw new BadCredentialsException("Token de refresco inválido o expirado");
+		throw new InvalidRefreshTokenException("Token de refresco inválido o expirado");
 	}
 
 	@Override

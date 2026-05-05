@@ -34,9 +34,11 @@ public class SecurityConfig {
                                          JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 
         http
+            .cors(cors -> {})
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(
                     "/api/auth/**",
                     "/error",
@@ -63,7 +65,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("*", "https://fintrack-frontend-rho.vercel.app"));
+        config.setAllowedOrigins(List.of("https://fintrack-frontend-rho.vercel.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

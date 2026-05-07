@@ -207,7 +207,3 @@ docker run -p 8080:8080 --env-file .env fintrack-auth:latest
 ## Contacto
 
 Para dudas sobre la autenticación, hablar con el equipo backend de FinTrack o abrir un issue en este repo.
-
----
-
-Archivo actualizado automáticamente por la herramienta de desarrollo.

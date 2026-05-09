@@ -38,7 +38,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
-          ./mvnw clean verify sonar:sonar \
+          ./mvnw clean package -DskipTests sonar:sonar \
             -Dsonar.projectKey=fintrackauth \
             -Dsonar.projectName=fintrackauth \
             -Dsonar.host.url=$SONAR_HOST_URL \

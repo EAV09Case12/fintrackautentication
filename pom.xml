@@ -145,7 +145,6 @@
 							<goal>prepare-agent</goal>
 						</goals>
 						<configuration>
-							<propertyName>jacoco.agent</propertyName>
 							<excludes>
 								<exclude>**/generated*/**</exclude>
 								<exclude>**/test/**</exclude>

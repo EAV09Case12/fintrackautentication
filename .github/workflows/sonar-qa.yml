@@ -1,0 +1,54 @@
+name: SonarCloud QA Analysis
+
+on:
+  push:
+    branches:
+      - QA
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Maven cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Make Maven Wrapper executable
+        run: chmod +x mvnw
+
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        run: |
+          ./mvnw clean verify \
+            sonar:sonar \
+            -Dsonar.projectKey=EAV09Case12_fintrackautentication \
+            -Dsonar.organization=fintrack \
+            -Dsonar.host.url=${{ env.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ env.SONAR_TOKEN }} \
+            -Dsonar.branch.name=main \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.java.coveragePlugin=jacoco
+
+      - name: Quality Gate
+        run: |
+          echo "SonarCloud analysis completed. Check dashboard for Quality Gate status."

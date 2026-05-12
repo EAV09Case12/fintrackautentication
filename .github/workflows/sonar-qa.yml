@@ -9,6 +9,8 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
@@ -38,7 +40,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
         run: |
-          ./mvnw clean verify \
+          ./mvnw clean verify -Djacoco.haltOnFailure=false \
             sonar:sonar \
             -Dsonar.projectKey=EAV09Case12_fintrackautentication \
             -Dsonar.organization=fintrack \

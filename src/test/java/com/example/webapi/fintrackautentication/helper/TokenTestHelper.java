@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.crypto.SecretKey;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -134,7 +135,7 @@ public class TokenTestHelper {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return null;
         }
     }

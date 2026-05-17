@@ -14,9 +14,7 @@ import com.example.webapi.fintrackautentication.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-
 import com.example.webapi.fintrackautentication.exception.InvalidRefreshTokenException;
-import com.example.webapi.fintrackautentication.exception.UserNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,18 +38,19 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 		// Locate user first to manage attempt counters
 		var userOpt = userRepository.findByEmail(request.getEmail());
 		if (userOpt.isEmpty()) {
+			// audit internally but do not reveal to client
 			saveAudit(null, "LOGIN", request.getEmail(), false, "Usuario no encontrado");
-			throw new UserNotFoundException("usuario no encontrado");
+			throw new BadCredentialsException("No fue posible iniciar sesión");
 		}
 		User user = userOpt.get();
 
 		if (user.isCuentaBloqueada()) {
 			saveAudit(user, "LOGIN", user.getEmail(), false, "Cuenta bloqueada");
-			throw new BadCredentialsException("Cuenta bloqueada");
+			throw new BadCredentialsException("No fue posible iniciar sesión");
 		}
 		if (!user.isEstado()) {
 			saveAudit(user, "LOGIN", user.getEmail(), false, "Cuenta inactiva");
-			throw new BadCredentialsException("Cuenta inactiva");
+			throw new BadCredentialsException("No fue posible iniciar sesión");
 		}
 
 		try {
@@ -79,11 +78,11 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 
 			if (user.isCuentaBloqueada()) {
 				saveAudit(user, "LOGIN", user.getEmail(), false, "Cuenta bloqueada por intentos fallidos");
-				throw new BadCredentialsException("Cuenta bloqueada por intentos fallidos");
+				throw new BadCredentialsException("No fue posible iniciar sesión");
 			}
 
 			saveAudit(user, "LOGIN", user.getEmail(), false, "Credenciales inválidas");
-			throw new BadCredentialsException("credenciales inválidas");
+			throw new BadCredentialsException("No fue posible iniciar sesión");
 		} catch (Exception ex) {
 			saveAudit(user, "LOGIN", user.getEmail(), false, ex.getMessage());
 			throw ex;

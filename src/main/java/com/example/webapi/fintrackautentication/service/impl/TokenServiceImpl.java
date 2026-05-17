@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.example.webapi.fintrackautentication.exception.InvalidRefreshTokenException;
 
 @Service
 @RequiredArgsConstructor
@@ -95,11 +96,18 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public void revokeByToken(String refreshToken) {
-        refreshTokenRepository.findByToken(refreshToken).ifPresent(rt -> {
-            rt.setRevoked(true);
-            rt.setRevokedAt(LocalDateTime.now());
-            refreshTokenRepository.save(rt);
-        });
+        var existing = refreshTokenRepository.findByToken(refreshToken);
+        if (existing.isEmpty()) {
+            throw new InvalidRefreshTokenException("Token de refresco inválido o inexistente");
+        }
+        RefreshToken rt = existing.get();
+        // No permitir revocar un token ya revocado o expirado
+        if (rt.isRevoked() || (rt.getExpiresAt() != null && rt.getExpiresAt().isBefore(LocalDateTime.now()))) {
+            throw new InvalidRefreshTokenException("Token de refresco inválido o expirado");
+        }
+        rt.setRevoked(true);
+        rt.setRevokedAt(LocalDateTime.now());
+        refreshTokenRepository.save(rt);
     }
 
     @Override

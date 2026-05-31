@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/FintrackAutenticacion
+    username: postgres
+    password: 
+    driver-class-name: org.postgresql.Driver
+
+app:
+  jwt:
+    secret: YzJmZjYyZjM0ZTRjYzQ1ZmE2OTc4YWJjZGVmMTIzNDU2Nzg5MDEyMzQ1Ng==
+    access-expiration-ms: 900000
+
+# also expose to top-level `jwt.secret` used by JwtService
+jwt:
+  secret: YzJmZjYyZjM0ZTRjYzQ1ZmE2OTc4YWJjZGVmMTIzNDU2Nzg5MDEyMzQ1Ng==
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health, prometheus"
+  endpoint:
+    prometheus:
+      enabled: true

@@ -217,12 +217,38 @@ class AutenticacionServiceTest {
     }
 
     @Test
+    void doesNotLockAccountBeforeMaxAttempts() {
+        /*
+         * Caso excepcional: cuenta NO se bloquea cuando aún no se alcanza el max.
+         * Esperado: intentosFallidos incrementa pero cuentaBloqueada permanece false.
+         */
+        User userWithAttempts = TestDataBuilder.createUserWithFailedAttempts(2);
+        when(userRepository.findByEmail(validLogin.getEmail()))
+            .thenReturn(Optional.of(userWithAttempts));
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+            .thenThrow(new BadCredentialsException("credenciales inválidas"));
+        when(securityProperties.getMaxIntentosFallidos())
+            .thenReturn(5);
+        when(userRepository.save(any(User.class)))
+            .thenReturn(userWithAttempts);
+
+        BadCredentialsException ex = assertThrows(BadCredentialsException.class, () -> {
+            autenticacionService.authenticate(validLogin);
+        });
+        assertNotNull(ex);
+
+        assertEquals(3, userWithAttempts.getIntentosFallidos());
+        assertTrue(!userWithAttempts.isCuentaBloqueada());
+    }
+
+    @Test
     void resetsFailedAttemptsOnSuccess() {
         /*
          * Verifica que intentosFallidos se resetean al login exitoso.
          * Esperado: intentosFallidos=0.
          */
         User userWithAttempts = TestDataBuilder.createUserWithFailedAttempts(2);
+
         when(userRepository.findByEmail(validLogin.getEmail()))
             .thenReturn(Optional.of(userWithAttempts));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))

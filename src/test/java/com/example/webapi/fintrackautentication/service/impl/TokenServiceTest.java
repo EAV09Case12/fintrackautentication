@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -214,7 +215,42 @@ class TokenServiceTest {
     }
 
     @Test
+    void rejectsRevokedTokenOnRevokeByToken() {
+        /*
+         * Caso excepcional: revocar un refresh token ya revocado.
+         * Esperado: lanza InvalidRefreshTokenException.
+         */
+        RefreshToken alreadyRevoked = TestDataBuilder.createRevokedRefreshToken(testUser);
+        when(refreshTokenRepository.findByToken(alreadyRevoked.getToken()))
+            .thenReturn(Optional.of(alreadyRevoked));
+
+        assertThrows(com.example.webapi.fintrackautentication.exception.InvalidRefreshTokenException.class, () -> {
+            tokenService.revokeByToken(alreadyRevoked.getToken());
+        });
+
+        verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
+    }
+
+    @Test
+    void rejectsExpiredTokenOnRevokeByToken() {
+        /*
+         * Caso excepcional: revocar un refresh token expirado.
+         * Esperado: lanza InvalidRefreshTokenException.
+         */
+        RefreshToken expired = TestDataBuilder.createExpiredRefreshToken(testUser);
+        when(refreshTokenRepository.findByToken(expired.getToken()))
+            .thenReturn(Optional.of(expired));
+
+        assertThrows(com.example.webapi.fintrackautentication.exception.InvalidRefreshTokenException.class, () -> {
+            tokenService.revokeByToken(expired.getToken());
+        });
+
+        verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
+    }
+
+    @Test
     void revokesAllUserTokens() {
+
         /*
          * Revoca todos los tokens de un usuario.
          * Esperado: todos los tokens del usuario se marcan revocados.

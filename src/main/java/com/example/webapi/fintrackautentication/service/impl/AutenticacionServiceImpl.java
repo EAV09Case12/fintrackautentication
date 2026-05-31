@@ -1,23 +1,25 @@
 package com.example.webapi.fintrackautentication.service.impl;
 
-import com.example.webapi.fintrackautentication.dto.request.LoginRequestDTO;
-import com.example.webapi.fintrackautentication.dto.request.RefreshTokenRequestDTO;
-import com.example.webapi.fintrackautentication.dto.response.AuthenticationResponseDTO;
-import com.example.webapi.fintrackautentication.domain.AuditoriaAtenticacion;
-import com.example.webapi.fintrackautentication.domain.User;
-import com.example.webapi.fintrackautentication.repository.AuditoriaRepository;
-import com.example.webapi.fintrackautentication.repository.UserRepository;
-import com.example.webapi.fintrackautentication.repository.RefreshTokenRepository;
-import com.example.webapi.fintrackautentication.security.JwtService;
-import com.example.webapi.fintrackautentication.service.AutenticacionService;
-import com.example.webapi.fintrackautentication.service.TokenService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import com.example.webapi.fintrackautentication.exception.InvalidRefreshTokenException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.webapi.fintrackautentication.domain.AuditoriaAtenticacion;
+import com.example.webapi.fintrackautentication.domain.User;
+import com.example.webapi.fintrackautentication.dto.request.LoginRequestDTO;
+import com.example.webapi.fintrackautentication.dto.request.RefreshTokenRequestDTO;
+import com.example.webapi.fintrackautentication.dto.response.AuthenticationResponseDTO;
+import com.example.webapi.fintrackautentication.exception.InvalidRefreshTokenException;
+import com.example.webapi.fintrackautentication.repository.AuditoriaRepository;
+import com.example.webapi.fintrackautentication.repository.RefreshTokenRepository;
+import com.example.webapi.fintrackautentication.repository.UserRepository;
+import com.example.webapi.fintrackautentication.security.JwtService;
+import com.example.webapi.fintrackautentication.service.AutenticacionService;
+import com.example.webapi.fintrackautentication.service.TokenService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -33,15 +35,17 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 	private final com.example.webapi.fintrackautentication.config.SecurityProperties securityProperties;
 
 	@Override
-	@Transactional(noRollbackFor = BadCredentialsException.class)
+	@Transactional(noRollbackFor = {BadCredentialsException.class, com.example.webapi.fintrackautentication.exception.UserNotFoundException.class})
 	public AuthenticationResponseDTO authenticate(LoginRequestDTO request) {
+
 		// Locate user first to manage attempt counters
 		var userOpt = userRepository.findByEmail(request.getEmail());
 		if (userOpt.isEmpty()) {
 			// audit internally but do not reveal to client
 			saveAudit(null, "LOGIN", request.getEmail(), false, "Usuario no encontrado");
-			throw new BadCredentialsException("No fue posible iniciar sesión");
+			throw new com.example.webapi.fintrackautentication.exception.UserNotFoundException("Usuario no encontrado");
 		}
+
 		User user = userOpt.get();
 
 		if (user.isCuentaBloqueada()) {
